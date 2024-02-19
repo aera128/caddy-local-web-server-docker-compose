@@ -1,0 +1,76 @@
+version: "3.9"
+
+services:
+  caddy:
+    container_name: caddy
+    image: caddy:latest
+    restart: unless-stopped
+    mem_limit: 128m
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./www:/app/public
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - php
+
+  php:
+    container_name: php
+    image: php:fpm
+    restart: unless-stopped
+    mem_limit: 256m
+    volumes:
+      - ./www:/app/public
+      - ./php_config/php.ini:/usr/local/etc/php/php.ini
+      - ./php_config/php.ini:/usr/local/etc/php/php.ini-development
+      - ./php_config/php.ini:/usr/local/etc/php/php.ini-production
+  db:
+    container_name: mariadb
+    image: mariadb:latest
+    restart: unless-stopped
+    mem_limit: 512m
+    environment:
+      MYSQL_ROOT_PASSWORD: changeme
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db_data:/var/lib/mysql
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin
+    restart: unless-stopped
+    mem_limit: 128m
+    ports:
+      - "8123:80"
+    environment:
+      UPLOAD_LIMIT: 1G
+      PMA_USER: root
+      PMA_PASSWORD: changeme
+      PMA_PORT: 3306
+
+  ftp:
+    container_name: ftp
+    image: garethflowers/ftp-server
+    restart: unless-stopped
+    mem_limit: 64m
+    environment:
+      FTP_USER: user
+      FTP_PASS: changeme
+    ports:
+      - 20-21:20-21/tcp
+      - 40000-40009:40000-40009/tcp
+    volumes:
+      - ./ftp_data:/home/user
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  default:
+    name: web-server
