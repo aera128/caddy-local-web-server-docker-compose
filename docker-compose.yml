@@ -1,11 +1,8 @@
-version: "3.9"
-
 services:
   caddy:
     container_name: caddy
     image: caddy:latest
     restart: unless-stopped
-    mem_limit: 128m
     ports:
       - "80:80"
       - "443:443"
@@ -22,7 +19,6 @@ services:
     container_name: php
     image: php:fpm
     restart: unless-stopped
-    mem_limit: 256m
     volumes:
       - ./www:/app/public
       - ./php_config/php.ini:/usr/local/etc/php/php.ini
@@ -32,9 +28,9 @@ services:
     container_name: mariadb
     image: mariadb:latest
     restart: unless-stopped
-    mem_limit: 512m
+    command: --max_allowed_packet=1024M
     environment:
-      MYSQL_ROOT_PASSWORD: changeme
+      MARIADB_ROOT_PASSWORD: 48624862
     ports:
       - "3306:3306"
     volumes:
@@ -44,28 +40,35 @@ services:
     container_name: phpmyadmin
     image: phpmyadmin
     restart: unless-stopped
-    mem_limit: 128m
     ports:
       - "8123:80"
     environment:
-      UPLOAD_LIMIT: 1G
+      UPLOAD_LIMIT: 4G
+      MEMORY_LIMIT: 4G
       PMA_USER: root
-      PMA_PASSWORD: changeme
+      PMA_PASSWORD: 48624862
       PMA_PORT: 3306
 
   ftp:
     container_name: ftp
     image: garethflowers/ftp-server
     restart: unless-stopped
-    mem_limit: 64m
     environment:
       FTP_USER: user
-      FTP_PASS: changeme
+      FTP_PASS: user
     ports:
       - 20-21:20-21/tcp
       - 40000-40009:40000-40009/tcp
     volumes:
       - ./ftp_data:/home/user
+
+  gundb:
+    container_name: gundb
+    image: gundb/gun
+    restart: unless-stopped
+    mem_limit: 256m
+    ports:
+      - "8765:8765"
 
 volumes:
   caddy_data:
